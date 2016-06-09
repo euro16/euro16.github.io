@@ -189,6 +189,15 @@ function init2() {
 }
 body {
 	background: #1986D0;
+	background-image: url(bg-jumbo2.jpeg);
+  	background-position: center;
+ -	background-size: 100% auto;
+ +	background-size: cover;
+  	background-attachment: fixed;
+  	padding-top: 80px;
+}
+background-div {
+	background: #1986D0;
 	background: -moz-linear-gradient(top, #6BDAF3 0%, #1986D0 60%,#375A7F 100%);
 	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#6BDAF3), color-stop(60%,#1986D0), color-stop(100%,#375A7F));
 	background: -webkit-linear-gradient(top, #6BDAF3 0%, #1986D0 60%,#375A7F 100%)
@@ -197,12 +206,15 @@ body {
 	background: linear-gradient(to bottom, #6BDAF3 0%, #1986D0 60%,#375A7F 100%);
 	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#6BDAF3', endColorstr='#375A7F',GradientType=0 );
   	background-attachment: fixed !important;
-	padding-top: 80px;
+  	position: fixed;
+  	height: 100%;
+  	width: 100%;
 }
 </style>
 </head>
 
 <body>
+	<div class="background-div hidden-lg hidden-md"></div>
 <nav class="navbar navbar-default navbar-fixed-top">
   <div class="container-fluid">
     <div class="navbar-header">
