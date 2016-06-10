@@ -9,91 +9,125 @@
 <link rel="icon" href="http://www.uefa.com/imgml/favicon/comp/euro2016.ico" type="image/x-icon">
 
 <!-- Stylesheets -->
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
 <link rel="stylesheet" type="text/css" href="bootstrap.css">
-
 
 <!-- JS Files -->
 <script type="text/javascript" src="jquery-2.2.4.min.js"></script>
 <script type="text/javascript" src="tabletop.js"></script>
+<script type="text/javascript" src="bootstrap.min.js"></script>
 <!--<script type="text/javascript" src="backbone.tabletopSync.js"></script>-->
 <script type="text/javascript">
+// The function actually applying the offset
+function offsetAnchor() {
+    if(location.hash.length !== 0) {
+        window.scrollTo(window.scrollX, window.scrollY - 200);
+    }
+    
+};
+// This will capture hash changes while on the page
+$(window).on("hashchange", function () {
+    offsetAnchor();
+});
 $(document).ready(function(){ init(); init2();
+$(function() {
+  $('a[href*="#"]:not([href="#"])').click(function() {
+    if (location.pathname.replace(/^\//,'') == this.pathname.replace(/^\//,'') && location.hostname == this.hostname) {
+      var target = $(this.hash);
+      target = target.length ? target : $('[name=' + this.hash.slice(1) +']');
+      if (target.length) {
+        $('html, body').animate({
+          scrollTop: target.offset().top
+        }, 1000);
+        return false;
+      }
+    }
+  });
+});
 	 });
-
   var public_spreadsheet_url = 'https://docs.google.com/spreadsheets/d/17GY4aGz04u_eAxMk8vknROoXxQakhRarHZGYQXU38A8/pubhtml';
   var tabletop;
  
 function init2() {
     Tabletop.init( { key: public_spreadsheet_url,
                      callback: showInfo ,
-                      wanted: [ "Results" ],
-                      postProcess: function(elements) {
-                      elements["Team 1"] = elements["team1"];
-                      elements["Team 2"] = elements["team2"];},
+                      wanted: [ "Results" , "Teams"],
                       debug: true
                      });
                   function showInfo(sheets, tabletop) {
-       console.log(tabletop.sheets("Results").elements);
-        $.each( tabletop.sheets("Results").elements, function(i, results) {
-        if (results["1"].length !== 0)
-        var select = "  -  ";
-        
+                  	
+                  		
+                  		 
+       
+       // Grab Every Cell in the Results worksheet
+        $.each( tabletop.sheets("Results").elements, function(i, results){
+        	//console.log(results);
+        if (results["1"].length !== 0) // Determine if the match has been played 
+        var select = "  -  ";							        
         else
         var select ="  V  ";
         
+        // Match Details
+        if (results["Time"] == null)
+        var time = "TBC", date = "TBC", venue = "TBC";
+        else
+        var time = (results["Time"]+":00"), date = results["Date"], venue = results["Location"];
+        
+        //  || (rankings.Team == results["Team 1"] || results["Team 2"]) -- Old
+        
+        //var teams = $.inArray(results["Team 1"],tabletop.sheets("Teams").elements);
+        
+        //console.log(tabletop.sheets("Teams").elements[0]);
+        
+        // Extra Time or Penalty Notification
+        	console.log(results["ET?"]);
+        	
+        	if (results["Pen W"].length !== 0)
+        	var ET_pen = "<h2 class='text-center'>PENS</h2>";
+                else if (results["ET?"] == 1)
+        	var ET_pen = "<h2 class='text-center'>AET</h2>";
+        	else
+        	var ET_pen = "";
+        	
+        /*	
+        
+		if (i == 0)
+    		var previous = i;
+    		else
+    		var previous = i-1;
+		$.each(tabletop.sheets("Results").elements[previous], function(key, value) {
+        	if (key == "Date"){	
+        		// Do Something
+        	}
+    		});
+        */
+        	// Winner Array
+        	var winner = ["<span green>(W)</span>","<span red>(L)</span>", "<span amber>(D)</span>", "" ];
+        
+        	// Winner Conditions
+        	if ((results["Pen W"] == 1)||(results["1"] > results["2"])) 
+        	var x = 0, p = 1;
+        	else if ((results["Pen W"] == 2)||(results["1"] < results["2"]))
+        	var x = 1, p = 0;
+        	else if ((results["ET?"] == ET_pen)==(results["1"] == results["2"])==(results["1"] !== ""))
+        	var x = 2, p = 2;
+                else 
+                var x = 3, p = 3;
+        
         if (i <= 35){
-          var cat_li = $('<div class="row fixture-rows"><div class="col-sm-5"><img src="flags/' + results["Team 1"] + '.png" style="display:block;margin: 10px auto;"><h3 class="text-center">' + results["Team 1"] + '</h3></div><div class="col-sm-2 scores"><h1 class="text-center">' + results["1"] + select + results["2"] + '</h1></div><div class="col-sm-5"><img src="flags/' + results["Team 2"] + '.png" style="display:block;margin: 10px auto;"><h3 class="text-center">' + results["Team 2"] + '</h3></div><div>');
+        	
+                
+          var cat_li = $('<div class="row fixture-rows"><div class="col-sm-5 col-xs-4"><img src="flags/' + results["Team 1"] + '.png" style="display:block;margin: 5px auto;"><h3 class="text-center hidden-xs">' + results["Team 1"] + winner[x] + '</h3><p class="mob-cty text-center hidden-sm hidden-md hidden-lg">' + results["Team 1"] + '</p></div><div class="col-sm-2 col-xs-4 scores"><h1 class="text-center"><span class="resolve hidden-sm hidden-md hidden-lg">' + winner[x] + '</span>' + results["1"] + select + results["2"] + '<span class="resolve hidden-sm hidden-md hidden-lg">' + winner[p] + '</span></h1>' +  ET_pen + '</div><div class="col-sm-5 col-xs-4"><img src="flags/' + results["Team 2"] + '.png" style="display:block;margin: 5px auto;"><h3 class="text-center hidden-xs">' + results["Team 2"] + winner[p] + '</h3><p class="mob-cty text-center hidden-sm hidden-md hidden-lg">' + results["Team 2"] + '</p></div></div> <div class="row match-row"><div class="col-sm-3 col-xs-0"></div><div class="col-sm-6 col-xs-12"><div class="col-xs-4"><h4 class="text-center">Kick Off:<br>' + time + '</h4></div><div class="col-xs-4"><h4 class="text-center">Date:<br>' + date + '</h4></div><div class="col-xs-4"><h4 class="text-center">Stadium:<br>' + venue + '</h4></div></div><div class="col-sm-3 col-xs-0"></div></div>');
           
           cat_li.appendTo("#results");
-         }
+        }
          else {
-         	var cat_li = $('<div class="row fixture-rows"><div class="col-sm-5"><h3 class="text-center">' + results["Team 1"] + '</h3></div><div class="col-sm-2 scores"><h1 class="text-center">' + results["1"] + select + results["2"] + '</h1></div><div class="col-sm-5"><h3 class="text-center">' + results["Team 2"] + '</h3></div><div>');
+         	
+         	var cat_li = $('<div class="row fixture-rows"><div class="col-sm-5 col-xs-4"><img src="flags/undefined.png" style="display:block;margin: 5px auto;"><h3 class="text-center hidden-xs"><h3 class="text-center hidden-xs">' + results["Team 1"] + winner[x] + '</h3><p class="mob-cty text-center hidden-sm hidden-md hidden-lg">' + results["Team 1"] + '</p></div><div class="col-sm-2 col-xs-4 scores"><h1 class="text-center"><span class="resolve hidden-sm hidden-md hidden-lg">' + winner[x] + '</span>' + results["1"] + select + results["2"] + '<span class="resolve hidden-sm hidden-md hidden-lg">' + winner[p] + '</span></h1></div><div class="col-sm-5 col-xs-4"><img src="flags/undefined.png" style="display:block;margin: 5px auto;"><h3 class="text-center hidden-xs"><h3 class="text-center hidden-xs">' + results["Team 2"] + winner[p] + '</h3><p class="mob-cty text-center hidden-sm hidden-md hidden-lg">' + results["Team 2"] + '</p></div></div> <div class="row match-row"><div class="col-sm-3 col-xs-0"></div><div class="col-sm-6 col-xs-12"><div class="col-xs-4"><h4 class="text-center">Kick Off:<br>' + time + '</h4></div><div class="col-xs-4"><h4 class="text-center">Date:<br>' + date + '</h4></div><div class="col-xs-4"><h4 class="text-center">Stadium:<br>' + venue + '</h4></div></div><div class="col-sm-3 col-xs-0"></div></div>');
           
           cat_li.appendTo("#results");
          }
         });
         }
-   /* function showInfo(sheets, tabletop) {
-        var sheet = sheets['Results'];
-       	var column_names = sheet.column_names;
-            
-        var article = $("#results");
-        
-        var line = $("<div class='row'></div>");
-        
-        for(var i = 0; i < sheet.elements.length; i++) {
-          var row = sheet.elements[i];
-          for(var j = 0; j < column_names.length; j++) {
-          //var match = $("<div class='col-xs-12'></div>");
-          var team1 = $("<div class='col-xs-5'></div>");
-          var team2 = $("<div class='col-xs-5'></div>");
-        
-          var c_n4 = column_names[4];
-          
-          $("<h3 class='text-center'></h3>").text(row[c_n4]).appendTo(team1);
-          
-          
-          var score1 = column_names[5];
-          var score2 = column_names[6];
-          
-          //if (score1.length != -1)
-          	var score = $("<h2 class='text-center'>"+ row[score1] +"  -  "+ row[score2] +"</h2>");
-         // else 
-          	//var score = $("<h2 class='text-center'>V</h2>");
-          
-          var result = $("<div class='col-xs-2'></div>").append(score);
-          
-          var c_n7 = column_names[7];
-          
-          $("<h3 class='text-center'></h3>").text(row[c_n7]).appendTo(team2);
-          }
-		line.append(team1);
-		line.append(result);
-		line.append(team2);
-        }
-        article.append(line);
-      };*/
  }; 
  
   function init() {
@@ -102,8 +136,6 @@ function init2() {
                      parseNumbers: true 
                      });
   
-
-
       function showInfo(sheets, tabletop) {
         var sheet = sheets['Player Rankings'];
        	var column_names = sheet.column_names;
@@ -160,7 +192,7 @@ function init2() {
       }
 }
 </script>
-
+<style> *{}</style>
 <style>
 .logo {
 	height: 100%;
@@ -172,15 +204,55 @@ function init2() {
 }
 .fixture-rows {
 	padding: 15px 0;
+	background: rgba(55,90,127,0.65);
+}
+.match-row {
+	padding: 5px 0 5px;
+	margin-bottom: 30px;
+	background: rgba(0,0,0,0.5);
 }
 .scores {
 	padding: 5px 0 15px;
+	height: 100%;
 	background: rgba(0,0,0,0.5);
 }
+#results span {
+	font-size: 80%;
+	padding-left: 10px;
+	font-weight: 900;
+	margin-right: -10px;
+}
+#results .mob-cty span {
+	font-size: 90%;
+	padding: 0 !important;
+	margin: 0 !important;
+} 
+span[green]{
+	color: #00bc8c;
+}
+span[red]{
+	color:#e74c3c;
+}
+span[amber]{
+	color:#f39c12;
+}
+#results span.resolve {
+	padding: 0 !important;
+	margin: 0 !important;
+}
+#results span.resolve > span {
+	font-size: 30%;
+	padding: 0 !important;
+	margin: 0 5px!important;
+}
+#results h3{
+	/*margin-left: 10px;*/
+}
 #results, #leaderboard {
-	/*background: #28415b;*/
+	background: #28415b;
 	background: rgba(0,0,0,0.5);
 	width: 100%;
+	padding-bottom: 50px;
 }
 #leaderboard {
 	/*box-shadow: 0px -30px 120px 40px rgba(0,0,0,0.5);*/
@@ -190,14 +262,10 @@ function init2() {
 	margin: 0 auto;
 }
 body {
-	background: #1986D0;
-	background-image: url(bg-jumbo2.jpeg);
-  	background-position: center;
-	background-size: cover;
-  	background-attachment: fixed;
-  	padding-top: 80px;
+	background: #375A7F;
+	padding-top: 80px;
 }
-.background-div {
+.background-div-mob {
 	background: #1986D0;
 	background: -moz-linear-gradient(top, #6BDAF3 0%, #1986D0 60%,#375A7F 100%);
 	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#6BDAF3), color-stop(60%,#1986D0), color-stop(100%,#375A7F));
@@ -211,42 +279,75 @@ body {
   	height: 100%;
   	width: 100%;
   	z-index: -1;
-	margin-top: -80px;
+  	margin-top: -80px;
 }
+.background-div {
+	background-image: url(bg-jumbo2.jpeg);
+	background-position: center;
+	background-size: cover;
+	background-attachment: fixed;
+	position: fixed;
+  	height: 100%;
+  	width: 100%;
+  	z-index: -1;
+  	margin-top: -80px;
+}
+hr { border-color: inherit }
 </style>
 </head>
 
 <body>
-
 <nav class="navbar navbar-default navbar-fixed-top">
   <div class="container-fluid">
     <div class="navbar-header">
-      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
         <span class="sr-only">Toggle navigation</span>
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
       </button>
-      <a class="navbar-brand" href="#"><img src="logo.png" class="logo"></a>
+      <a class="navbar-brand" href="#top"><img src="logo.png" class="logo"></a>
     </div>
 
-    <div class="navbar-collapse collapse">
+    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
       <ul class="nav navbar-nav">
         <li><a href="#leaderboard">Leaderboard<span class="sr-only">(current)</span></a></li>
         <li><a href="#results">Fixtures/Results</a></li>
+        <!--<li class="dropdown">
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Dropdown <span class="caret"></span></a>
+          <ul class="dropdown-menu" role="menu">
+            <li><a href="#">Action</a></li>
+            <li><a href="#">Another action</a></li>
+            <li><a href="#">Something else here</a></li>
+            <li class="divider"></li>
+            <li><a href="#">Separated link</a></li>
+            <li class="divider"></li>
+            <li><a href="#">One more separated link</a></li>
+          </ul>
+        </li> -->
       </ul>
+     <!-- <form class="navbar-form navbar-left" role="search">
+        <div class="form-group">
+          <input type="text" class="form-control" placeholder="Search">
+        </div>
+        <button type="submit" class="btn btn-default">Submit</button>
+      </form> 
+      <ul class="nav navbar-nav navbar-right">
+        <li><a href="#">Link</a></li>
+      </ul>-->
     </div>
-    <!--/.nav-collapse -->
   </div>
 </nav>
-	<div class="background-div hidden-lg hidden-md"></div>
+<div class="background-div-mob hidden-lg"></div>
+<div class="background-div hidden-md hidden-sm hidden-xs"></div>
+
 <div style="padding-top: 50px;" class="container text-center">
 <img src="logo.png" class="hero">
   <h1><strong>SWEEPSTAKES</strong></h1>
   <br>
   <h4 style="padding: 10px 15%;">Welcome all to the Euro 2016 Sweepstake website.  Here you can keep up to date with all things football - through the highs and the lows.  Best of luck to you all!</h4>
   <br>
-  <p><a href="#leaderboard" class="btn btn-primary btn-lg">View Table</a></p>
+  <p><a href="#leaderboard" class="btn btn-primary btn-lg">View Leaderboard</a></p>
 
 </div>
 <div id="leaderboard" style="margin-top: 50vh;" class="container">
@@ -269,7 +370,5 @@ body {
 	});
 </script>
 -->
-<script type="text/javascript" src="bootstrap.min.js"></script>
 </body>
 </html>
-<!-- https://docs.google.com/spreadsheets/d/17GY4aGz04u_eAxMk8vknROoXxQakhRarHZGYQXU38A8/edit?usp=sharing https://bootswatch.com/darkly/ -->
