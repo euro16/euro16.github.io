@@ -28,7 +28,28 @@ function offsetAnchor() {
 $(window).on("hashchange", function () {
     offsetAnchor();
 });
-$(document).ready(function(){ init(); init2();
+$(document).ready(function(){ init(); init2(); init3();
+
+$("#players").click(function(){
+	if ( $("#playerboard").css('display') == 'none' ){
+		$("#players").toggleClass("inactive");
+		$("#team").toggleClass("inactive");
+	};
+	$("#teamboard").hide();
+	$("#playerboard").stop().fadeIn(400);
+	
+});
+$("#team").click(function(){
+	if ( $("#teamboard").css('display') == 'none' ){
+		$("#team").toggleClass("inactive");
+		$("#players").toggleClass("inactive");
+	};
+	$("#playerboard").hide();
+	$("#teamboard").stop().fadeIn(400);
+	
+});
+
+
 $(function() {
   $('a[href*="#"]:not([href="#"])').click(function() {
     if (location.pathname.replace(/^\//,'') == this.pathname.replace(/^\//,'') && location.hostname == this.hostname) {
@@ -46,6 +67,69 @@ $(function() {
 	 });
   var public_spreadsheet_url = 'https://docs.google.com/spreadsheets/d/18DITauQeNqKBBPtekG0YHfVeH2mCBctcH11dFgjeNlA/pubhtml';
   var tabletop;
+
+function init3() {
+    Tabletop.init( { key: public_spreadsheet_url,
+                     callback: showInfo,
+                     parseNumbers: true 
+                     });
+  
+      function showInfo(sheets, tabletop) {
+        var sheet = sheets['Teams Rankings'];
+       	var column_names = sheet.column_names;
+            
+        var table = $("#teams");
+        
+        
+        var head = $("<thead></thead>");
+        table.append(head);
+        var header = $("<tr class='active'></tr>");
+        for(var i = 0; i < column_names.length; i++) {
+        if(i == 0 || i == 1 || i == 2){
+        		$("<th></th>").text(column_names[i]).appendTo(header);
+        	}
+        else {
+          $("<th class='text-center'></th>").text(column_names[i]).appendTo(header);
+         }
+        }
+        head.append(header);
+        header.prepend("<th>#</th>");
+        
+        var tbody = $("<tbody></tbody>");
+        for(var i = 0; i < sheet.elements.length; i++) {
+          var row = sheet.elements[i];
+          var html_row = $("<tr class='info2'><td>"+ (i+1) +"</td></tr>");
+          
+          for(var j = 0; j < column_names.length; j++) {
+            var column_name = column_names[j];
+            if(j == 0){
+            	$("<td></td>").text(row[column_name]).prepend("<img src='flags/"+row[column_name]+".png' class='flag'>").appendTo(html_row);
+            }
+            else if(j == 1){
+            	$("<td></td>").text(row[column_name]).appendTo(html_row);
+            }
+            else {
+            $("<td class='text-center'></td>").text(row[column_name]).appendTo(html_row);
+            }
+          }
+          
+          tbody.append(html_row);
+         
+          
+          
+          // CSS Classes assigned to table rows
+          tbody.find("tr").eq(0).removeClass("info2").addClass("success");
+          tbody.find("tr").eq(1).removeClass("info2").addClass("info");
+          tbody.find("tr").eq(22).removeClass("info2").addClass("warning");
+          tbody.find("tr").eq(23).removeClass("info2").addClass("danger");
+          
+          
+        }
+        table.append(tbody);
+        
+      }
+}
+
  
 function init2() {
     Tabletop.init( { key: public_spreadsheet_url,
@@ -254,8 +338,9 @@ span[amber]{
 	width: 100%;
 	padding-bottom: 50px;
 }
-#leaderboard {
+#playerboard, #teamboard {
 	/*box-shadow: 0px -30px 120px 40px rgba(0,0,0,0.5);*/
+	width: 100%;
 	overflow-x: scroll;
 }
 #leaderboard table {
@@ -264,6 +349,12 @@ span[amber]{
 body {
 	background: #375A7F;
 	padding-top: 80px;
+}
+a.inactive {
+	background: #111111;
+	border-color: #111111 !important;
+	transition: background 0.2s;
+	-webkit-transition: background 0.2s;
 }
 .background-div-mob {
 	background: #1986D0;
@@ -352,11 +443,18 @@ hr { border-color: inherit }
 </div>
 <div id="leaderboard" style="margin-top: 50vh;" class="container">
 	<h1 class="text-center" style="padding: 20px;">Leaderboard</h1>
-
+	<div><a href="javascript:void(0)" id="players" class="btn btn-default col-xs-6">Players</a><a href="javascript:void(0)" id="team" class="btn btn-default inactive col-xs-6">Teams</a></div>
+<div id="playerboard">
 <table class="table table-striped table-hover" id="pretty">
 	<!-- Content is dynamically parsed by tabletop -->
 </table>
+</div>
 
+<div id="teamboard" style="display:none;">
+<table class="table table-striped table-hover" id="teams">
+	<!-- Content is dynamically parsed by tabletop -->
+</table>
+</div>
 </div>
 
 <div class="container" id="results">
@@ -370,5 +468,7 @@ hr { border-color: inherit }
 	});
 </script>
 -->
+</body>
+</html>
 </body>
 </html>
